@@ -1,4 +1,5 @@
 import { forwardRef } from "react";
+import Switch from "@/components/Common/Switch";
 import type { FloatingWindowHeaderProps } from "@/types";
 import {
   CopyClassesIcon,
@@ -11,7 +12,15 @@ const FloatingWindowHeader = forwardRef<
   FloatingWindowHeaderProps
 >(
   (
-    { isFixed, isDragging, onCopyClasses, onCopyElement, onDeactivate },
+    {
+      isFixed,
+      isDragging,
+      onCopyClasses,
+      onCopyElement,
+      onDeactivate,
+      isAIMode,
+      onAIModeChange,
+    },
     ref
   ) => {
     return (
@@ -21,8 +30,11 @@ const FloatingWindowHeader = forwardRef<
           isFixed ? (isDragging ? "cursor-grabbing" : "cursor-grab") : ""
         }`}
       >
-        <TifooText className="text-md" />
-        <div className="flex gap-2">
+        <div className="flex items-center gap-3">
+          <TifooText className="text-md" />
+          <Switch checked={isAIMode} onChange={onAIModeChange} />
+        </div>
+        <div className="flex items-center space-x-2">
           <button
             onClick={onCopyClasses}
             className="bg-transparent border-none text-white cursor-pointer p-1 rounded hover:bg-[#0C7ABF]"

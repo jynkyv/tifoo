@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from "react";
-import type { FloatingWindowProps, ClassItem } from "@/types";
+import React, { useEffect, useRef, useState } from "react";
+import type { FloatingWindowProps, ClassItem, ToastProps } from "@/types";
 import {
   useFloatingWindowLogic,
   useClassManagement,
@@ -12,6 +12,7 @@ import {
   Toast,
   ElementNavigation,
 } from "@/components";
+import { api } from "@/services/api";
 
 const FloatingWindow: React.FC<FloatingWindowProps> = ({
   element,
@@ -24,6 +25,10 @@ const FloatingWindow: React.FC<FloatingWindowProps> = ({
 }) => {
   const floatingWindowRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
+  const [isAIMode, setIsAIMode] = useState(false);
+  const [prompt, setPrompt] = useState("");
+  const [toast, setToast] = useState<ToastProps | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const {
     classes,
@@ -35,8 +40,12 @@ const FloatingWindow: React.FC<FloatingWindowProps> = ({
     handleInputChange,
   } = useClassManagement(element, onClassChange);
 
-  const { toast, setToast, handleCopyClasses, handleCopyElement } =
-    useFloatingWindowLogic(classes, element);
+  const {
+    toast: floatingWindowToast,
+    setToast: setFloatingWindowToast,
+    handleCopyClasses,
+    handleCopyElement,
+  } = useFloatingWindowLogic(classes, element);
 
   const { isDragging, handleMouseDown, handleMouseMove, handleMouseUp } =
     useDraggable(isFixed, headerRef, floatingWindowRef, position, setPosition);
@@ -54,6 +63,73 @@ const FloatingWindow: React.FC<FloatingWindowProps> = ({
 
   const handleDivMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     handleMouseDown(e.nativeEvent);
+  };
+
+  const handlePromptSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!prompt.trim() || isGenerating) return;
+
+    setIsGenerating(true);
+    try {
+      const generator = api.streamGenerate({
+        elementCode: element.outerHTML,
+        description: prompt.trim(),
+      });
+
+      let fullContent = "";
+      let lastProcessedClasses = new Set<string>();
+
+      for await (const chunk of generator) {
+        const lines = chunk.split("\n");
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            try {
+              const jsonStr = line.slice(6);
+              const data = JSON.parse(jsonStr);
+              if (data.content) {
+                fullContent += data.content;
+
+                const classMatch = fullContent.match(/class="([^"]*)"/);
+                if (classMatch && classMatch[1]) {
+                  const currentClasses = new Set(
+                    classMatch[1].split(/\s+/).filter(Boolean)
+                  );
+
+                  lastProcessedClasses.forEach((cls) => {
+                    if (!currentClasses.has(cls)) {
+                      element.classList.remove(cls);
+                    }
+                  });
+                  currentClasses.forEach((cls) => {
+                    if (!lastProcessedClasses.has(cls)) {
+                      handleAddClass(cls);
+                    }
+                  });
+
+                  lastProcessedClasses = currentClasses;
+                }
+              }
+            } catch (parseError) {
+              console.error("Failed to parse SSE data:", parseError);
+            }
+          }
+        }
+      }
+
+      setToast({
+        type: "success",
+        message: "Successfully updated styles!",
+      });
+    } catch (error) {
+      console.error("Stream error:", error);
+      setToast({
+        type: "error",
+        message: "Failed to generate classes. Please try again.",
+      });
+    } finally {
+      setIsGenerating(false);
+      setPrompt("");
+    }
   };
 
   return (
@@ -77,6 +153,8 @@ const FloatingWindow: React.FC<FloatingWindowProps> = ({
         onCopyClasses={handleCopyClasses}
         onCopyElement={handleCopyElement}
         onDeactivate={onDeactivate}
+        isAIMode={isAIMode}
+        onAIModeChange={setIsAIMode}
       />
       <div className="px-3 pb-3">
         {onElementSelect && (
@@ -91,12 +169,31 @@ const FloatingWindow: React.FC<FloatingWindowProps> = ({
           onToggle={handleClassToggle}
           onRemove={handleRemoveClass}
         />
-        <AutoComplete
-          options={autocompleteResults}
-          onSelect={handleAddClass}
-          onInputChange={handleInputChange}
-          inputValue={query}
-        />
+        {isAIMode ? (
+          <form onSubmit={handlePromptSubmit}>
+            <input
+              type="text"
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              disabled={isGenerating}
+              className={`w-full mt-2 bg-white border border-gray-300 focus:ring-1 focus:ring-[#1DA1F2] focus:outline-none shadow-sm p-1.5 rounded text-xs placeholder-[#657786] transition duration-150 ease-in-out ${
+                isGenerating ? "opacity-50 cursor-not-allowed" : ""
+              }`}
+              placeholder={
+                isGenerating
+                  ? "Generating..."
+                  : "Describe the styles you want..."
+              }
+            />
+          </form>
+        ) : (
+          <AutoComplete
+            options={autocompleteResults}
+            onSelect={handleAddClass}
+            onInputChange={handleInputChange}
+            inputValue={query}
+          />
+        )}
       </div>
       {toast && <Toast message={toast.message} type={toast.type} />}
     </div>
