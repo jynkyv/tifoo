@@ -14,6 +14,7 @@
     "test:watch": "jest --watch"
   },
   "dependencies": {
+    "@swc/types": "^0.1.17",
     "plasmo": "0.90.5",
     "react": "18.2.0",
     "react-dom": "18.2.0"
@@ -49,10 +50,17 @@
       "https://*/*"
     ],
     "permissions": [
-      "activeTab"
+      "activeTab",
+      "storage"
     ],
     "action": {
       "default_popup": "popup.html"
+    },
+    "externally_connectable": {
+      "matches": [
+        "http://localhost:3000/*",
+        "http://localhost:6100/*"
+      ]
     },
     "web_accessible_resources": [
       {

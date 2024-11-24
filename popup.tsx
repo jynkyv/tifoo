@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
 import "@/styles";
+import { AuthProvider, useAuth } from "@/hooks/useAuth";
 
-function IndexPopup() {
+const IndexPopup = () => {
   const [isActive, setIsActive] = useState(false);
+  const { user, signOut } = useAuth();
 
   const sendMessageToActiveTab = async (message: any) => {
     const [tab] = await chrome.tabs.query({
@@ -57,7 +59,7 @@ function IndexPopup() {
               className={`w-3 h-3 rounded-full ${isActive ? "bg-green-400" : "bg-gray-400"}`}
             ></span>
             <span className="text-sm font-mono">
-              {isActive ? "Active" : "Inactive"}
+              {isActive ? "Active" : ""}
             </span>
           </div>
         </div>
@@ -75,16 +77,36 @@ function IndexPopup() {
           >
             {isActive ? "Deactivate" : "Activate"}
           </button>
+          {!user ? (
+            <button
+              className="w-full py-2 px-4 rounded-full bg-blue-500 text-white font-medium transition-all duration-300 hover:bg-blue-600"
+              onClick={() =>
+                window.open("http://localhost:3000/login", "_blank")
+              }
+            >
+              Sign In / Sign Up
+            </button>
+          ) : (
+            <div className="flex items-center justify-between p-2 bg-gray-100 rounded-lg">
+              <div className="flex items-center space-x-2">
+                <div className="h-9 w-9 bg-blue-500 text-white flex items-center justify-center rounded-full">
+                  {user.email.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <span className="text-sm font-medium">{user.email}</span>
+                  <span className="block text-xs text-gray-400">Free Plan</span>
+                </div>
+              </div>
+              <button
+                onClick={signOut}
+                className="flex items-center gap-2 text-red-600"
+              >
+                Sign Out
+              </button>
+            </div>
+          )}
         </div>
-        <div className="bg-[#E8F5FE] p-3 flex justify-between text-xs text-[#657786]">
-          <a
-            href={process.env.PLASMO_PUBLIC_GITHUB_REPO_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-[#1DA1F2] transition-colors duration-300"
-          >
-            Learn more
-          </a>
+        <div className="bg-[#E8F5FE] p-3 flex justify-end text-xs text-[#657786]">
           <a
             href={process.env.PLASMO_PUBLIC_GITHUB_ISSUES_URL}
             target="_blank"
@@ -97,6 +119,14 @@ function IndexPopup() {
       </div>
     </div>
   );
-}
+};
 
-export default IndexPopup;
+const Popup = () => {
+  return (
+    <AuthProvider>
+      <IndexPopup />
+    </AuthProvider>
+  );
+};
+
+export default Popup;

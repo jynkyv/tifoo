@@ -9,6 +9,17 @@ interface GenerateRequest {
   description: string;
 }
 
+interface User {
+  id: number;
+  email: string;
+  role?: string;
+  user_role?: string;
+  name?: string | null;
+  avatar?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export const api = {
   streamGenerate: async function* (
     params: GenerateRequest
@@ -41,6 +52,39 @@ export const api = {
       }
     } catch (error) {
       console.error("Failed to generate stream:", error);
+      throw error;
+    }
+  },
+
+  fetchUserInfo: async (token: string): Promise<User> => {
+    try {
+      console.log("Fetching user info with token:", token);
+      const response = await fetch(`${config.apiBaseUrl}/users/me`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        console.error("API Error:", {
+          status: response.status,
+          statusText: response.statusText,
+        });
+
+        const errorData = await response.json().catch(() => ({}));
+        console.error("Error details:", errorData);
+
+        throw new Error(`Failed to fetch user info: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("User info fetched successfully:", data);
+      return data.data;
+    } catch (error) {
+      console.error("Error in fetchUserInfo:", error);
       throw error;
     }
   },
