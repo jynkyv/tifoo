@@ -58,7 +58,6 @@ export const api = {
 
   fetchUserInfo: async (token: string): Promise<User> => {
     try {
-      console.log("Fetching user info with token:", token);
       const response = await fetch(`${config.apiBaseUrl}/users/me`, {
         method: "GET",
         headers: {
@@ -81,7 +80,6 @@ export const api = {
       }
 
       const data = await response.json();
-      console.log("User info fetched successfully:", data);
       return data.data;
     } catch (error) {
       console.error("Error in fetchUserInfo:", error);

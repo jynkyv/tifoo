@@ -21,22 +21,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     chrome.storage.local.get("tifoo_token", (result) => {
-      console.log("Token retrieved:", result);
       const token = result.tifoo_token;
       if (token) {
-        console.log("Token found:", token);
         api
           .fetchUserInfo(token)
           .then((userInfo) => {
-            console.log("User info fetched successfully:", userInfo);
             setUser(userInfo);
           })
           .catch(() => {
-            console.error("Failed to fetch user info, removing token");
             chrome.storage.local.remove("tifoo_token");
           });
       } else {
-        console.log("No token found");
+        console.error("No token found");
       }
     });
   }, []);
