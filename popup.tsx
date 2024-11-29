@@ -108,10 +108,10 @@ const IndexPopup = () => {
             <button
               className="px-3 py-1 rounded-full bg-white text-[#1DA1F2] text-sm font-medium hover:bg-opacity-90 transition-all duration-300"
               onClick={() =>
-                window.open("http://localhost:3000/login", "_blank")
+                window.open("http://localhost:3000/signin", "_blank")
               }
             >
-              Login
+              Sign In
             </button>
           ) : (
             <UserAvatar user={user} signOut={signOut} />

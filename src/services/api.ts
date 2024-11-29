@@ -16,8 +16,8 @@ interface User {
   user_role?: string;
   name?: string | null;
   avatar?: string | null;
-  createdAt: string;
-  updatedAt: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export const api = {
@@ -58,7 +58,13 @@ export const api = {
 
   fetchUserInfo: async (token: string): Promise<User> => {
     try {
-      const response = await fetch(`${config.apiBaseUrl}/users/me`, {
+      console.log("开始获取用户信息", {
+        url: `${config.apiBaseUrl}/auth/user`,
+        tokenLength: token?.length,
+        apiBaseUrl: config.apiBaseUrl,
+      });
+
+      const response = await fetch(`${config.apiBaseUrl}/auth/user`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -67,22 +73,42 @@ export const api = {
         },
       });
 
-      if (!response.ok) {
-        console.error("API Error:", {
-          status: response.status,
-          statusText: response.statusText,
-        });
-
-        const errorData = await response.json().catch(() => ({}));
-        console.error("Error details:", errorData);
-
-        throw new Error(`Failed to fetch user info: ${response.status}`);
-      }
+      console.log("收到响应:", {
+        status: response.status,
+        statusText: response.statusText,
+        headers: Object.fromEntries(response.headers.entries()),
+      });
 
       const data = await response.json();
-      return data.data;
+
+      if (!response.ok) {
+        console.error("API 错误:", {
+          status: response.status,
+          statusText: response.statusText,
+          error: data,
+          url: `${config.apiBaseUrl}/auth/user`,
+        });
+        throw new Error(
+          `Failed to fetch user info: ${data.error} - ${data.details || ""}`
+        );
+      }
+
+      console.log("用户信息获取成功:", {
+        hasData: !!data,
+        fields: Object.keys(data),
+      });
+
+      return {
+        ...data,
+        created_at: data.created_at,
+        updated_at: data.updated_at,
+      };
     } catch (error) {
-      console.error("Error in fetchUserInfo:", error);
+      console.error("获取用户信息失败:", {
+        error,
+        message: error instanceof Error ? error.message : "未知错误",
+        stack: error instanceof Error ? error.stack : undefined,
+      });
       throw error;
     }
   },

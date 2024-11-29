@@ -59,7 +59,7 @@
     "externally_connectable": {
       "matches": [
         "http://localhost:3000/*",
-        "http://localhost:6100/*"
+        "http://localhost:3000/api/*"
       ]
     },
     "web_accessible_resources": [
