@@ -9,13 +9,24 @@ interface GenerateRequest {
   description: string;
 }
 
-interface User {
+interface Subscription {
+  plan: "free" | "pro" | "enterprise";
+  status: string;
+  current_period_end?: string;
+}
+
+export interface User {
   id: number;
   email: string;
+  name?: string;
+  avatar?: string;
   role?: string;
-  user_role?: string;
-  name?: string | null;
-  avatar?: string | null;
+  subscription?: {
+    plan_id: "free" | "monthly_ai" | "yearly_ai";
+    status: string;
+    current_period_end: string;
+    paddle_subscription_id: string | null;
+  };
   created_at: string;
   updated_at: string;
 }
@@ -25,7 +36,7 @@ export const api = {
     params: GenerateRequest
   ): AsyncGenerator<string> {
     try {
-      const response = await fetch(`${config.apiBaseUrl}/ai/generate/stream`, {
+      const response = await fetch(`${config.apiBaseUrl}/ai/stream`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
