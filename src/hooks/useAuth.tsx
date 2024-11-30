@@ -1,26 +1,21 @@
 import { useEffect, useState, createContext, useContext } from "react";
-import { api } from "@/services/api";
-
-interface User {
-  id: number;
-  email: string;
-  name?: string;
-  avatar?: string;
-  role?: string;
-}
+import { api, type User } from "@/services/api";
 
 interface AuthContextType {
   user: User | null;
   signOut: () => void;
+  isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
   signOut: () => {},
+  isLoading: true,
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -35,6 +30,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } catch (error) {
         console.error("Auth check failed:", error);
         setUser(null);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -65,7 +62,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, signOut }}>
+    <AuthContext.Provider value={{ user, signOut, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

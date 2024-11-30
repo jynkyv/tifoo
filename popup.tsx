@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react";
 import "@/styles";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import PlanIcon from "@/components/icons/PlanIcon";
-
+import type { User } from "@/services/api";
+import { LoadingSpinner } from "@/components/icons/LoadingSpiner";
 const truncateEmail = (email: string) => {
   const [username] = email.split("@");
   if (username.length <= 6) return username;
@@ -15,7 +16,7 @@ const getAvatarText = (email: string) => {
   return username.slice(0, 2).toUpperCase();
 };
 
-const UserAvatar = ({ user, signOut }: { user: any; signOut: any }) => {
+const UserAvatar = ({ user, signOut }: { user: User; signOut: any }) => {
   const [isHovered, setIsHovered] = useState(false);
 
   return (
@@ -54,7 +55,7 @@ const UserAvatar = ({ user, signOut }: { user: any; signOut: any }) => {
 
 const IndexPopup = () => {
   const [isActive, setIsActive] = useState(false);
-  const { user, signOut } = useAuth();
+  const { user, signOut, isLoading } = useAuth();
 
   const sendMessageToActiveTab = async (message: any) => {
     const [tab] = await chrome.tabs.query({
@@ -111,7 +112,7 @@ const IndexPopup = () => {
                 window.open("http://localhost:3000/signin", "_blank")
               }
             >
-              Sign In
+              {isLoading ? <LoadingSpinner /> : "Sign In"}
             </button>
           ) : (
             <UserAvatar user={user} signOut={signOut} />
@@ -135,8 +136,11 @@ const IndexPopup = () => {
         <div className="bg-[#E8F5FE] p-3 flex justify-between items-center text-xs text-[#657786]">
           {user && (
             <span className="flex items-center gap-2">
-              <PlanIcon type="free" />
-              Free Plan
+              <PlanIcon type={user.subscription?.plan_id || "free"} />
+              {user.subscription?.plan_id === "monthly_ai" ||
+              user.subscription?.plan_id === "yearly_ai"
+                ? "AI Assistant"
+                : "Free Plan"}
             </span>
           )}
           <a
