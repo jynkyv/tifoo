@@ -39,7 +39,7 @@ const UserAvatar = ({ user, signOut }: { user: User; signOut: any }) => {
           {truncateEmail(user.email)}
         </span>
         <span
-          className={`text-sm text-white absolute left-0 top-0 inline-block transition-transform duration-300 ${
+          className={`w-12text-sm text-white absolute left-0 top-0 inline-block transition-transform duration-300 ${
             isHovered
               ? "translate-y-0 opacity-100"
               : "translate-y-full opacity-0"
