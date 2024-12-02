@@ -25,21 +25,23 @@ const UserAvatar = ({ user, signOut }: { user: User; signOut: any }) => {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="h-7 w-7 bg-white text-[#1DA1F2] flex items-center justify-center rounded-full text-sm font-medium">
-        {getAvatarText(user.email)}
-      </div>
-      <div className="relative overflow-hidden">
+      <div className="relative overflow-hidden min-w-[120px] flex items-center justify-end">
         <span
-          className={`text-sm text-white inline-block transition-transform duration-300 ${
+          className={`flex items-center transition-transform duration-300 ${
             isHovered
               ? "-translate-y-full opacity-0"
               : "translate-y-0 opacity-100"
           }`}
         >
-          {truncateEmail(user.email)}
+          <div className="h-7 w-7 bg-white text-[#1DA1F2] flex items-center justify-center rounded-full text-sm font-medium mr-2">
+            {getAvatarText(user.email)}
+          </div>
+          <span className="truncate text-sm text-white">
+            {truncateEmail(user.email)}
+          </span>
         </span>
         <span
-          className={`w-12text-sm text-white absolute left-0 top-0 inline-block transition-transform duration-300 ${
+          className={`absolute right-0 top-0 text-sm text-white transition-transform duration-300 ${
             isHovered
               ? "translate-y-0 opacity-100"
               : "translate-y-full opacity-0"
