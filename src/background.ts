@@ -16,17 +16,20 @@ chrome.runtime.onMessageExternal.addListener(
             tifoo_token: message.token,
             tokenOrigin: message.origin,
           });
+          
           // verify the storage
           const result = await chrome.storage.local.get(["tifoo_token"]);
           sendResponse({ success: true });
         } catch (error) {
-          sendResponse({ success: false, error });
+          sendResponse({ success: false, error: error.message });
         }
       };
 
       saveToken();
       return true;
     }
+
+    sendResponse({ success: false, error: "Unknown message type" });
   }
 );
 

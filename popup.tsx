@@ -57,7 +57,8 @@ const UserAvatar = ({ user, signOut }: { user: User; signOut: any }) => {
 
 const IndexPopup = () => {
   const [isActive, setIsActive] = useState(false);
-  const { user, signOut, isLoading } = useAuth();
+  const { user, signOut, isLoading, refreshUser } = useAuth();
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const sendMessageToActiveTab = async (message: any) => {
     const [tab] = await chrome.tabs.query({
@@ -100,6 +101,23 @@ const IndexPopup = () => {
     }
   };
 
+  const handleRefreshAuth = async () => {
+    setIsRefreshing(true);
+    try {
+      const result = await chrome.storage.local.get(["tifoo_token"]);
+      
+      // Use new refreshUser method
+      await refreshUser();
+    } catch (error) {
+      console.error("Failed to refresh auth status:", error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  // Only show loading on initial load when no cached user info
+  const showInitialLoading = isLoading && !user;
+
   return (
     <div data-tifoo-ext>
       <div className="w-80">
@@ -108,14 +126,24 @@ const IndexPopup = () => {
             <span className={`font-caprasimo text-xl`}>tifoo</span>
           </div>
           {!user ? (
-            <button
-              className="px-3 py-1 rounded-full bg-white text-[#1DA1F2] text-sm font-medium hover:bg-opacity-90 transition-all duration-300"
-              onClick={() =>
-                window.open("http://localhost:3000/signin", "_blank")
-              }
-            >
-              {isLoading ? <LoadingSpinner /> : "Sign In"}
-            </button>
+            <div className="flex items-center space-x-2">
+              <button
+                className="px-2 py-1 rounded bg-white/20 text-white text-xs hover:bg-white/30 transition-all duration-300 disabled:opacity-50"
+                onClick={handleRefreshAuth}
+                disabled={isRefreshing}
+                title="刷新认证状态"
+              >
+                {isRefreshing ? <LoadingSpinner /> : "刷新"}
+              </button>
+              <button
+                className="px-3 py-1 rounded-full bg-white text-[#1DA1F2] text-sm font-medium hover:bg-opacity-90 transition-all duration-300"
+                onClick={() =>
+                  window.open("http://localhost:3000/signin", "_blank")
+                }
+              >
+                {showInitialLoading ? <LoadingSpinner /> : "Sign In"}
+              </button>
+            </div>
           ) : (
             <UserAvatar user={user} signOut={signOut} />
           )}

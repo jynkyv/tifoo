@@ -69,12 +69,6 @@ export const api = {
 
   fetchUserInfo: async (token: string): Promise<User> => {
     try {
-      console.log("开始获取用户信息", {
-        url: `${config.apiBaseUrl}/auth/user`,
-        tokenLength: token?.length,
-        apiBaseUrl: config.apiBaseUrl,
-      });
-
       const response = await fetch(`${config.apiBaseUrl}/auth/user`, {
         method: "GET",
         headers: {
@@ -84,30 +78,13 @@ export const api = {
         },
       });
 
-      console.log("收到响应:", {
-        status: response.status,
-        statusText: response.statusText,
-        headers: Object.fromEntries(response.headers.entries()),
-      });
-
       const data = await response.json();
 
       if (!response.ok) {
-        console.error("API 错误:", {
-          status: response.status,
-          statusText: response.statusText,
-          error: data,
-          url: `${config.apiBaseUrl}/auth/user`,
-        });
         throw new Error(
           `Failed to fetch user info: ${data.error} - ${data.details || ""}`
         );
       }
-
-      console.log("用户信息获取成功:", {
-        hasData: !!data,
-        fields: Object.keys(data),
-      });
 
       return {
         ...data,
@@ -115,11 +92,6 @@ export const api = {
         updated_at: data.updated_at,
       };
     } catch (error) {
-      console.error("获取用户信息失败:", {
-        error,
-        message: error instanceof Error ? error.message : "未知错误",
-        stack: error instanceof Error ? error.stack : undefined,
-      });
       throw error;
     }
   },
